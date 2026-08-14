@@ -34,10 +34,10 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          if git diff --quiet -- reject.list; then
+          git add reject.list
+          if git diff --cached --quiet; then
             echo "No changes to reject.list"
           else
-            git add reject.list
             git commit -m "chore: auto-update reject.list ($(date -u +'%Y-%m-%d %H:%M UTC'))"
             git push
           fi
