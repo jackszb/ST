@@ -1,0 +1,43 @@
+name: Update reject.list
+
+on:
+  schedule:
+    # 每天 UTC 00:00 运行（北京时间 08:00）
+    - cron: "0 0 * * *"
+  workflow_dispatch: {}   # 支持在 Actions 页面手动触发
+  push:
+    branches:
+      - main
+    paths:
+      - "scripts/convert.py"
+      - ".github/workflows/update-reject-list.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Generate reject.list
+        run: python3 scripts/convert.py
+
+      - name: Commit and push if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          if git diff --quiet -- reject.list; then
+            echo "No changes to reject.list"
+          else
+            git add reject.list
+            git commit -m "chore: auto-update reject.list ($(date -u +'%Y-%m-%d %H:%M UTC'))"
+            git push
+          fi
